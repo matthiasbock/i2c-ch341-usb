@@ -633,6 +633,8 @@ static int ch341_irq_probe (struct ch341_device* ch341_dev)
 {
     int i;
     int result;
+    struct irq_data *irqdata = NULL;
+
 
     CHECK_PARAM_RET (ch341_dev, -EINVAL);
 
@@ -657,7 +659,10 @@ static int ch341_irq_probe (struct ch341_device* ch341_dev)
 
     for (i = 0; i < ch341_dev->irq_num; i++)
     {
-        ch341_dev->irq_descs[i]   = irq_to_desc(ch341_dev->irq_base + i);
+        irqdata = irq_get_irq_data(ch341_dev->irq_base + i);
+        if (irqdata)
+            ch341_dev->irq_descs[i]   = irq_data_to_desc(irqdata);
+
         ch341_dev->irq_enabled[i] = false;
 
         irq_set_chip          (ch341_dev->irq_base + i, &ch341_dev->irq);
