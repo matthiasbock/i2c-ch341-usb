@@ -994,7 +994,6 @@ static int ch341_gpio_probe (struct ch341_device* ch341_dev)
 {
     struct gpio_chip *gpio = &ch341_dev->gpio;
     int result;
-    int i, j = 0;
 
     CHECK_PARAM_RET (ch341_dev, -EINVAL);
 
@@ -1048,21 +1047,6 @@ static int ch341_gpio_probe (struct ch341_device* ch341_dev)
 
     DEV_DBG (CH341_IF_ADDR, "registered GPIOs from %d to %d",
              gpio->base, gpio->base + gpio->ngpio - 1);
-
-    for (i = 0; i < CH341_GPIO_NUM_PINS; i++)
-    {
-        // in case the pin as CS signal, it is an GPIO pin
-        if ((result = gpio_request(gpio->base + j, ch341_board_config[i].name)) ||
-            (result = gpio_export (gpio->base + j, ch341_board_config[i].pin != 21 ? true : false)))
-        {
-            DEV_ERR (CH341_IF_ADDR, "failed to export GPIO %s: %d",
-                     ch341_board_config[i].name, result);
-            // reduce number of GPIOs to avoid crashes during free in case of error
-            ch341_dev->gpio_num = j ? j-1 : 0;
-            return result;
-        }
-        j++;
-    }
 
     ch341_dev->gpio_thread = kthread_run (&ch341_gpio_poll_function, ch341_dev, "i2c-ch341-usb-poll");
 
